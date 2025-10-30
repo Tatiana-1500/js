@@ -1,12 +1,17 @@
-let button = document.getElementById('btnDblClick');
-button.addEventListener('dblclick', function() {
-    button.textContent = 'Кнопка нажата дважды';
-})
-button.addEventListener('dblclick', function() {
-    button.textContent = 'Нажми меня дважды';
+let work = document.querySelectorAll('#taskWork li');
+work.forEach((item, index) => {
+  item.textContent = `Задача ${index + 1} выполнена`;
 });
 
-let select = document.getElementById('selectColor');
-select.addEventListener('change', function() {
-    document.body.style.backgroundColor = select.value;
-})
+let tasks = ["Купить молоко", "Выучить JavaScript", "Пойти на тренировку"];
+const allTasksList = document.querySelector('#taskAll');
+allTasksList.innerHTML = '';
+tasks.forEach(taskText => {
+  const li = document.createElement('li');
+  li.textContent = taskText;
+  allTasksList.appendChild(li);
+});
+
+let taskNew = document.createElement('li');
+taskNew.textContent = 'Помыть посуду';
+document.querySelector('#taskAll').prepend(taskNew);
