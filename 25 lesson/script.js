@@ -1,68 +1,51 @@
 const object = document.querySelector('.object');
+const coordinatesDisplay = document.getElementById('coordinates');
+
 let x = 0;
 let y = 0;
 
-// Получаем размеры окна браузера
-const maxX = window.innerWidth - object.offsetWidth;
-const maxY = window.innerHeight - object.offsetHeight;
-
+//Ограничивает движение
 document.addEventListener('keydown', (event) => {
-    if (event.key === 'q' || event.key === 'Q') {
-        rotateObject();
-    }
-});
+    const objectWidth = object.offsetWidth;
+    const objectHeight = object.offsetHeight;
+    const maxX = window.innerWidth - objectWidth;
+    const maxY = window.innerHeight - objectHeight;
 
-document.addEventListener('keydown', (event) => {
     switch (event.key) {
         case 'ArrowUp':
-            moveObject(x, Math.max(y - 10, 0));
+            if (y > 0) y -= 10;
             break;
         case 'ArrowDown':
-            moveObject(x, Math.min(y + 10, maxY));
+            if (y < maxY) y += 10;
             break;
         case 'ArrowLeft':
-            moveObject(Math.max(x - 10, 0), y);
+            if (x > 0) x -= 10;
             break;
         case 'ArrowRight':
-            moveObject(Math.min(x + 10, maxX), y);
+            if (x < maxX) x += 10;
             break;
+        
+        // Поворот по нажатию клавиши Q
+        case 'q':
+        case 'Q':
+            object.style.transform = `translate(${x}px, ${y}px) rotate(180deg)`;
+            setTimeout(() => {
+                object.style.transform = `translate(${x}px, ${y}px) rotate(0deg)`;
+            }, 2000);
+            return;
     }
+
+    object.style.transform = `translate(${x}px, ${y}px)`;
+
+    // Отображает координаты
+    coordinatesDisplay.textContent = `x: ${x}, y: ${y}`;
 });
 
-function moveObject(newX, newY) {
-    x = newX;
-    y = newY;
-    object.style.left = `${x}px`;
-    object.style.top = `${y}px`;
-    updateCoordinates();
-}
-
-function updateCoordinates() {
-    document.getElementById('coordinates').innerText = `X: ${Math.round(x)} | Y: ${Math.round(y)}`;
-}
-
-updateCoordinates(); // Устанавливаем начальные значения координат
-
-// Эффект захвата объектом при клике мыши
+// Добавляет тень при зажатии мыши
 object.addEventListener('mousedown', () => {
     object.classList.add('grabbed');
 });
 
 object.addEventListener('mouseup', () => {
     object.classList.remove('grabbed');
-});
-
-// Функция вращения объекта при нажатии клавиши F
-function rotateObject() {
-    object.style.transitionDuration = '0.5s';
-    object.style.transform = 'rotate(180deg)';
-    setTimeout(() => {
-        object.style.transitionDuration = '';
-        object.style.transform = '';
-    }, 500);
-}
-
-window.addEventListener('resize', () => {
-    maxX = window.innerWidth - object.offsetWidth;
-    maxY = window.innerHeight - object.offsetHeight;
 });
