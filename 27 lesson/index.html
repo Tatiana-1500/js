@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style/style.css">
+</head>
+<body>   
+    <div id="game"></div>
+    <div id="score">Счет: 0</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+    <script>
+        // Задание №1 — инициализирует сцену, камеру и рендерер (как и было на уроке, изменений не вносила)
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+        camera.position.z = 5;
+        const renderer = new THREE.WebGLRenderer({antialias: true}); // Если добавить antialias: true, то он сглаживает края объектов для более плавного изображения 
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('game').appendChild(renderer.domElement);
+
+        // Задание №2 — источники освещения (как и было на уроке, изменений не вносила)
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(0, 1, 1).normalize();
+        scene.add(directionalLight);
+
+        // Отрисовка зеленой платформы
+        const playerGeometry = new THREE.BoxGeometry(1, 0.2, 1);
+        const playerMaterial = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
+        const player = new THREE.Mesh(playerGeometry, playerMaterial);
+        player.position.y = -3;
+        scene.add(player);
+
+        // Задание №3 и №4 — добавляет 3D-объекты
+
+        // Капсула
+        const capsuleGeometry = new THREE.CapsuleGeometry(0.5, 1, 4, 8);
+        
+        // Задание 4: Материал и стиль объекта
+        const capsuleMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x0000ff, 
+            metalness: 0.3, 
+            roughness: 0.7 
+        });
+
+        const capsule = new THREE.Mesh(capsuleGeometry, capsuleMaterial);
+        capsule.position.x = -5;
+        capsule.position.y = 1;
+        scene.add(capsule);
+
+        // Icosahedron
+        const icosahedronGeometry = new THREE.IcosahedronGeometry(0.7, 0);
+
+        // Задание 4: Материал и стиль объекта
+        const icosahedronMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x800080, 
+            metalness: 0.6, 
+            roughness: 0.2 
+        });
+
+        const icosahedron = new THREE.Mesh(icosahedronGeometry, icosahedronMaterial);
+        icosahedron.position.x = 5;
+        icosahedron.position.y = 3;
+        scene.add(icosahedron);
+
+        // Управление зеленой платформой
+        let moveLeft = false;
+        let moveRight = false;
+
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'ArrowLeft') moveLeft = true;
+            if (event.code === 'ArrowRight') moveRight = true;
+        });
+
+        document.addEventListener('keyup', (event) => {
+            if (event.code === 'ArrowLeft') moveLeft = false;
+            if (event.code === 'ArrowRight') moveRight = false;
+        });
+
+        // Счет
+        let score = 0;
+        const scoreElement = document.getElementById('score');
+
+        // Отрисовка красных объектов
+        const obstacles = [];
+        function createObstacle() {
+            const size = Math.random() * 0.5 + 0.2;
+            const geometry = new THREE.BoxGeometry(size, size, size);
+            const material = new THREE.MeshPhongMaterial({ color: 0xff0000 });
+            const obstacle = new THREE.Mesh(geometry, material);
+            obstacle.position.x = (Math.random() - 0.5) * 10;
+            obstacle.position.y = 5;
+            obstacle.userData = { speed: Math.random() * 0.02 + 0.01 };
+            scene.add(obstacle);
+            obstacles.push(obstacle);
+        }
+
+        // Интервал создания красных объектов
+        const obstacleInterval = setInterval(createObstacle, 1000);
+
+        // Цикл игры
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Перемещение и ограничение по оси X
+            if (moveLeft) player.position.x -= 0.3;
+            if (moveRight) player.position.x += 0.3;
+            player.position.x = Math.max(-5, Math.min(5, player.position.x));
+
+            // Задание 5 — Анимация 3D-объектов
+                capsule.rotation.x += 0.01;
+                capsule.rotation.y += 0.01;
+                icosahedron.rotation.y += 0.01;
+
+            // Создание красных объектов на разных позициях
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                const obstacle = obstacles[i];
+                obstacle.position.y -= obstacle.userData.speed;
+
+                // Проверка завершения игры, если объект не упал на зеленую платформу, то цикл продолжает работать   
+                if (checkCollision(player, obstacle)) {
+                    endGame();
+                    return;
+                }
+
+                // Смена значения счета, если падающий объект пролетел мимо зеленой платформы
+                if (obstacle.position.y < -5) {
+                    scene.remove(obstacle);
+                    obstacles.splice(i, 1);
+                    score += 1;
+                    scoreElement.textContent = `Счет: ${score}`;
+                }
+            }
+
+            // Изменение скорости при дальнейшей продолжительности игры
+            obstacles.forEach(obstacle => {
+                obstacle.userData.speed += 0.00001;
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        // Проверка столкновения красного куба с зеленой платформой
+        function checkCollision(obj1, obj2) {
+            const box1 = new THREE.Box3().setFromObject(obj1);
+            const box2 = new THREE.Box3().setFromObject(obj2);
+            return box1.intersectsBox(box2);
+        }
+
+        // Завершение игры
+        function endGame() {
+            alert(`Игра окончена! Ваш счет: ${score}`);
+        }
+
+        // Адаптивность окна, перестройка масштабов объектов
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Запуск игры по условиям выше
+        animate();
+    </script>
+</body>
+</html>
