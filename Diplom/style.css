@@ -1,0 +1,92 @@
+body {
+    margin: 0;
+    background-color: #1c1c1c;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif, sans-serif;
+    color: #fff;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    background-color: #111;
+}
+
+header h1 {
+    font-family: 'Rock Salt', cursive;
+    color: #186ade;
+    margin: 0;
+}
+
+header button {
+    background-color: #186ade;
+    border: none;
+    color: #fff;
+    padding: 8px 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: 0.3s;
+}
+
+header button:hover {
+    background-color: #104b9c;
+}
+
+.swiper {
+    width: 90%;
+    margin: 40px auto;
+    padding-bottom: 50px;
+}
+
+.swiper-slide {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.swiper-slide img {
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+.art-info-slide .description {
+    font-size: 14px;
+    line-height: 20px;
+    color: #ccc;
+    margin: 16px 0;
+}
+
+.art-info-slide {
+    padding: 16px;
+    text-align: center;
+}
+
+.art-info-slide h3 {
+    color: #186ade;
+    margin: 16px 0;
+}
+
+.art-info-slide p {
+    margin: 8px 0;
+}
+
+.art-info-slide button {
+    margin-top: 4px;
+    background-color: #186ade;
+    border: none;
+    color: #fff;
+    padding: 8px 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: 0.3s;
+}
+
+.art-info-slide button:hover {
+    background-color: #104b9c;
+}

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Угадай картину</title>
+<style>
+    body {
+        background-color: #1c1c1c; 
+        text-align: center; 
+        font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif, sans-serif; }
+    h1,
+    p {
+        color: white;
+    }
+    canvas { 
+        margin-top: 24px; }
+</style>
+</head>
+<body>
+
+    <h1>Угадай картину</h1>
+    <canvas id="gameCanvas" width="900" height="400"></canvas>
+    <p id="score">Очки: 0</p>
+
+    <script>
+        //Картины           
+        const artworks = [
+            { id: 1, title: "Мона Лиза", artist: "Леонардо да Винчи", year: 1503, image: "img/mona-lisa.jpg", description: "Портрет женщины, считающийся одним из величайших произведений искусства." },
+            { id: 2, title: "Звездная ночь", artist: "Винсент ван Гог", year: 1889, image: "img/starry-night.jpg", description: "Ночное небо над деревней Сен-Реми, выполненное в импрессионистском стиле." },
+            { id: 3, title: "Сотворение Адама", artist: "Микеланджело", year: 1512, image: "img/creation-of-adam.jpg", description: "Фреска на потолке Сикстинской капеллы, изображающая момент сотворения первого человека." },
+            { id: 4, title: "Крик", artist: "Эдвард Мунк", year: 1893, image: "img/scream.jpg", description: "Выразительный образ человеческой тревоги и одиночества." },
+            { id: 5, title: "Кувшинки", artist: "Клод Моне", year: 1919, image: "img/water-flowers.jpg", description: "Тихий пруд, усыпанный плавно колышущимися на воде белыми и розовыми кувшинками, где свет и отражения создают атмосферу умиротворения и гармонии с природой." }
+        ];
+
+        // Вопросы
+        const questions = [
+            { text: "Какая картина написана в 1503 году?", key: "year", value: 1503 },
+            { text: "Какая картина выполнена в импрессионистском стиле?", key: "description", value: "импрессионистском стиле" },
+            { text: "Какая картина является фреской?", key: "description", value: "Фреска" },
+            { text: "Какая картина является самой известной у Эдварда Мунка?", key: "artist", value: "Эдвард Мунк" },
+            { text: "Какая картина создает атмосферу умиротворения?", key: "description", value: "умиротворения" }
+        ];
+
+        // Создает Canvas
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+
+        let score = 0;
+        let currentQuestionIndex = 0;
+        let options = [];
+        let optionPositions = [];
+        const imgWidth = 280;
+        const imgHeight = 280;
+
+        // Перемешиваеет массива
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Генерирует вопросы
+        function generateOptions() {
+            const question = questions[currentQuestionIndex];
+            const correct = artworks.find(a => String(a[question.key]).includes(question.value));
+            const wrongs = shuffle(artworks.filter(a => a.id !== correct.id)).slice(0,2);
+            options = shuffle([correct, ...wrongs]);
+        }
+
+        // Рисует экран
+        function drawScreen() {
+            ctx.clearRect(0,0,canvasWidth,canvasHeight);
+            ctx.font = "24px sans-serif";
+            ctx.fillStyle = "#fff";
+            ctx.fillText(questions[currentQuestionIndex].text, 20, 40);
+
+            optionPositions = [];
+            const spacing = (canvasWidth - options.length * imgWidth) / (options.length + 1);
+
+            options.forEach((opt, i) => {
+                const x = spacing + i * (imgWidth + spacing);
+                const y = 80;
+                ctx.drawImage(opt.imgObj, x, y, imgWidth, imgHeight);
+                optionPositions.push({x, y, width: imgWidth, height: imgHeight, artwork: opt});
+            });
+        }
+
+        // Подсвечивает выбранную картину
+        function highlightOption(artwork, correct) {
+            const pos = optionPositions.find(p => p.artwork.id === artwork.id);
+            ctx.strokeStyle = correct ? "green" : "red";
+            ctx.lineWidth = 5;
+            ctx.strokeRect(pos.x, pos.y, pos.width, pos.height);
+        }
+
+        // Проверяет ответ
+        function checkAnswer(artwork) {
+            const question = questions[currentQuestionIndex];
+            const correct = String(artwork[question.key]).includes(question.value);
+            if (correct) {
+                score++;
+                document.getElementById('score').textContent = `Очки: ${score}`;
+            }
+
+            highlightOption(artwork, correct);
+
+            // Пауза перед следующим вопросом
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < questions.length) {
+                    generateOptions();
+                    drawScreen();
+                } else {
+                    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                    ctx.font = "32px sans-serif";
+                    ctx.fillStyle = "#fff";
+                    ctx.textAlign = "center"; 
+                    ctx.textBaseline = "middle"; 
+                    ctx.fillText( 
+                    `Игра окончена! Вы набрали ${score} из ${questions.length} очков`,
+                    canvasWidth / 2,       
+                    canvasHeight / 2    
+                    );
+                }
+            }, 800);
+        }
+
+        // Обрабатывает клик
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            for (const pos of optionPositions) {
+                if (clickX >= pos.x && clickX <= pos.x + pos.width &&
+                    clickY >= pos.y && clickY <= pos.y + pos.height) {
+                    checkAnswer(pos.artwork);
+                    break;
+                }
+            }
+        });
+
+        // Загружает все изображения и начинает игру
+        let loadedImages = 0;
+        artworks.forEach(a => {
+            const img = new Image();
+            img.src = a.image;
+            img.onload = () => {
+                a.imgObj = img;
+                loadedImages++;
+                if (loadedImages === artworks.length) {
+                    generateOptions();
+                    drawScreen();
+                }
+            };
+        });
+    </script>
+</body>
+</html>
